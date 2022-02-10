@@ -1,5 +1,8 @@
 import numpy as np
 from sklearn.mixture import GaussianMixture
+#from pymoo.model.problem import problem
+#from pymoo.algorithms.nsga2 import NSGA2
+#from deap import benchmarks
 import matplotlib.pyplot as plt
 import pandas as pd
 import wake_model
@@ -19,13 +22,13 @@ def cost(L):
     return C
 
 def power(GMM, Turbines, wind_speed):
-    divisions = 72
+    DIVISIONS = 72
 
     cart_values = []
     pol_values = []
-    for i in range(0, divisions):
-        cart_values.append(pol2cart(wind_speed, i*360/divisions))
-        pol_values.append([wind_speed, i*360/divisions])
+    for i in range(0, DIVISIONS):
+        cart_values.append(pol2cart(wind_speed, i*360/DIVISIONS))
+        pol_values.append([wind_speed, i*360/DIVISIONS])
     cart_values = np.array(cart_values)
 
     weights = GMM.predict_proba(cart_values)
@@ -37,9 +40,9 @@ def power(GMM, Turbines, wind_speed):
         density[i] = density[i]/total
 
     AveragePowerOutput = 0
-    for i in range(0, divisions):
-        AveragePowerOutput += wake_model.Wake(Turbines, wind_speed, i*360/divisions)*density[i]
-    AveragePowerOutput = AveragePowerOutput/divisions
+    for i in range(0, DIVISIONS):
+        AveragePowerOutput += wake_model.Wake(Turbines, wind_speed, i*360/DIVISIONS)*density[i]
+    AveragePowerOutput = AveragePowerOutput/DIVISIONS
     return AveragePowerOutput
 
 
@@ -73,13 +76,20 @@ frame.columns = ['Weight', 'Height', 'cluster']
 
 wind = 10
 
+'''
+class Wind_Farm_Layout(Layout):
 
-T = np.full((400), False)
+    def _evaluate(self, designs, out, *args, **kwargs):
+'''
+
+T = np.full((400), True)
 
 Turbine_cost = cost(T)
 print(Turbine_cost)
 Power_Output = power(gmm, T, wind)
 print(Power_Output)
+
+
 
 '''
 color=['blue','green']
