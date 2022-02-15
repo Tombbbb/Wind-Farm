@@ -1,10 +1,13 @@
-import numpy as np
 from sklearn.mixture import GaussianMixture
-#from pymoo.model.problem import problem
-#from pymoo.algorithms.nsga2 import NSGA2
-#from deap import benchmarks
+from pymoo.factory import get_sampling, get_crossover, get_mutation
+from pymoo.visualization.scatter import Scatter
+from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.core.problem import Problem
+from pymoo.optimize import minimize
+import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import wake_model
 import math
 
@@ -76,20 +79,45 @@ frame.columns = ['Weight', 'Height', 'cluster']
 
 wind = 10
 
-'''
-class Wind_Farm_Layout(Layout):
+class ProblemWrapper(Problem):
 
     def _evaluate(self, designs, out, *args, **kwargs):
-'''
+        res = []
+        for design in designs:
+            res.append([0-power(gmm, design, wind), cost(design)])
 
+        out['F'] = np.array(res)
+
+problem = ProblemWrapper(n_var=400, n_obj=2, xl=[True]*400, xu=[False]*400)
+
+
+algorithm = NSGA2(pop_size=5,
+    sampling=get_sampling("bin_random"),
+    crossover=get_crossover("bin_two_point"),
+    mutation=get_mutation("bin_bitflip"),
+    eliminate_duplicates=True)
+
+stop_criteria = ('n_gen', 5)
+
+results = minimize(
+    problem=problem,
+    algorithm=algorithm,
+    termination=stop_criteria
+)
+
+res_data = results.F.T
+fig = go.Figure(data=go.Scatter(x=0-res_data[0], y=res_data[1], mode='markers'))
+fig.show()
+
+
+'''
 T = np.full((400), True)
 
 Turbine_cost = cost(T)
 print(Turbine_cost)
 Power_Output = power(gmm, T, wind)
 print(Power_Output)
-
-
+'''
 
 '''
 color=['blue','green']
