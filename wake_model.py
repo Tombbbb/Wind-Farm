@@ -1,3 +1,7 @@
+"""
+Contains funtions useful for the wake model, power output and wind farm layout
+"""
+
 import math
 
 class Turbines:
@@ -17,15 +21,19 @@ class Turbines:
 
 
 def getAngle(x, y, z):
-    '''
-    returns the angle created between 3 points
-    '''
+    """
+    Inputs 3 points
+    returns the angle created between the 3 points
+    """
     angle = math.degrees(math.atan2(z[1]-y[1], z[0]-y[0]) - math.atan2(x[1]-y[1], x[0]-y[0]))
     if angle < 0:
         angle += 360
     return angle
 
 def getWindFarmList():
+    """
+    returns an array for the wind farm layout
+    """
     wind_farm = []
     for i in range(0,20):
         wind_farm.append([None]*20)
@@ -33,7 +41,10 @@ def getWindFarmList():
 
 
 def Wake(turbine_string, wind_speed, wind_direcetion):
-
+    """
+    Inputs a list for the tubines, the wind speed and the wind direction
+    Returns the expected power output of the wind farm layout using the wake model
+    """
     Ct = 0.8 #Thrust Coefficient
     Kw = 0.2 #Wake Decay Coefficient
     a = 103.33
@@ -82,7 +93,10 @@ def Wake(turbine_string, wind_speed, wind_direcetion):
 
 
 def print_wind_farm(turbine_string):
-
+    """
+    Inputs a list the represents the wind farm layout
+    Prints the wind farm with an O where there is a turbine
+    """
     wind_farm = getWindFarmList()
 
     T = Turbines()

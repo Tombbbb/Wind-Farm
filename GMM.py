@@ -1,3 +1,10 @@
+""" Machine Learning to optimise wind turbine placements in a wind farm
+
+Creates a Gaucian Mixture Model for existing wind data for a wind farm in La Haute Borne
+Uses the wake model and the GMM to generate expected power output for a given wind farm layout
+Uses Multi-Objective Optinisation to find pareto front of wind farm layouts
+"""
+
 from sklearn.mixture import GaussianMixture
 from pymoo.factory import get_sampling, get_crossover, get_mutation
 from pymoo.visualization.scatter import Scatter
@@ -12,11 +19,21 @@ import wake_model
 import math
 
 def pol2cart(rho, phi):
+    """
+    Converts polar coordinates to cartesian coordinates
+    input is the wind speed and wind direction
+    output is the north-south and east-west components of the wind
+    """
     x = rho * np.cos(np.pi*(phi/180))
     y = rho * np.sin(np.pi*(phi/180))
     return[x, y]
 
 def cost(L):
+    '''
+    The cost is a function of the number of wind turbines
+    Inputs a list that represents the wind farm layout
+    Returns the cost of the windfarm
+    '''
     Turbine_count = 0
     for i in L:
         if i == True:
@@ -25,6 +42,11 @@ def cost(L):
     return C
 
 def power(GMM, Turbines, wind_speed):
+    """
+    Uses wake_model.py which is used for caluclating the power output
+    Inputs the GMM, a list for the wind farm layout and the wind speed
+    Returns the expected power output of a wind farm layout
+    """
     DIVISIONS = 72
 
     cart_values = []
@@ -47,7 +69,6 @@ def power(GMM, Turbines, wind_speed):
         AveragePowerOutput += wake_model.Wake(Turbines, wind_speed, i*360/DIVISIONS)*density[i]
     AveragePowerOutput = AveragePowerOutput/DIVISIONS
     return AveragePowerOutput
-
 
 
 dataset = []
