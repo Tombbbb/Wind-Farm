@@ -1,5 +1,5 @@
 """
-Contains funtions useful for the wake model, power output and wind farm layout
+Contains funtions used for the wake model, power output and wind farm layout
 """
 
 import math
@@ -87,7 +87,7 @@ def Wake(turbine_string, wind_speed, wind_direcetion):
             for k in Turbine_wake_list:
                  Turbine_wake += k**2
             Turbine_wake = wind_speed*(1 - math.sqrt(Turbine_wake))
-        Turbine_power += a*(1+m*(math.e**(0-(Turbine_wake/(T.getRadius())))))/(1+n*(math.e**(0-(Turbine_wake/(T.getRadius())))))
+        Turbine_power += a*(1+m*(math.e**(-(Turbine_wake/(T.getRadius())))))/(1+n*(math.e**(-(Turbine_wake/(T.getRadius())))))
 
     return Turbine_power
 
