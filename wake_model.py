@@ -30,7 +30,7 @@ def getAngle(x, y, z):
         angle += 360
     return angle
 
-def getWindFarmList():
+def getEmptyWindFarmList():
     """
     returns an array for the wind farm layout
     """
@@ -53,7 +53,7 @@ def Wake(turbine_string, wind_speed, wind_direcetion):
     tau = 1.14
     VP = [a,m,n,tau] #vector parameter of the logistic function
 
-    wind_farm = getWindFarmList()
+    wind_farm = getEmptyWindFarmList()
 
     T = Turbines()
     for i in range(400):
@@ -97,7 +97,7 @@ def print_wind_farm(turbine_string):
     Inputs a list the represents the wind farm layout
     Prints the wind farm with an O where there is a turbine
     """
-    wind_farm = getWindFarmList()
+    wind_farm = getEmptyWindFarmList()
 
     T = Turbines()
     for i in range(400):
@@ -109,6 +109,8 @@ def print_wind_farm(turbine_string):
         coords = i
         wind_farm[coords[0]][coords[1]] = i
 
+    f = open('wind_farms.txt', 'a')
+
     for i in wind_farm:
         row = ""
         for j in i:
@@ -116,5 +118,10 @@ def print_wind_farm(turbine_string):
                 row += "O"
             else:
                 row += "."
-        print(row)
+        f.write(row)
+        f.write('\n')
+    f.write('\n')
+
+    f.close()
+
     return

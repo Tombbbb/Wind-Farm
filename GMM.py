@@ -66,7 +66,11 @@ def power(GMM, Turbines, wind_speed):
 
     AveragePowerOutput = 0
     for i in range(0, DIVISIONS):
-        AveragePowerOutput += wake_model.Wake(Turbines, wind_speed, i*360/DIVISIONS)*density[i]
+        AveragePowerOutput += wake_model.Wake(
+            Turbines,
+            wind_speed,
+            i*360/DIVISIONS
+        )*density[i]
     AveragePowerOutput = AveragePowerOutput/DIVISIONS
     return AveragePowerOutput
 
@@ -99,37 +103,49 @@ frame['cluster'] = labels
 frame.columns = ['Weight', 'Height', 'cluster']
 
 wind = 10
+POPULATION = 3
+GENERATIONS = 3
 
 class ProblemWrapper(Problem):
 
     def _evaluate(self, designs, out, *args, **kwargs):
         res = []
+        des = []
         for design in designs:
-            res.append([0-power(gmm, design, wind), cost(design)])
+            c = cost(design)
+            res.append([0-power(gmm, design, wind), c])
+            des.append([design, c])
 
         out['F'] = np.array(res)
+        out['G'] = des
 
 problem = ProblemWrapper(n_var=400, n_obj=2, xl=[True]*400, xu=[False]*400)
 
+algorithm = NSGA2(pop_size = POPULATION,
+    sampling = get_sampling("bin_random"),
+    crossover = get_crossover("bin_two_point"),
+    mutation = get_mutation("bin_bitflip", prob = 0.05),
+    eliminate_duplicates = True)
 
-algorithm = NSGA2(pop_size=5,
-    sampling=get_sampling("bin_random"),
-    crossover=get_crossover("bin_two_point"),
-    mutation=get_mutation("bin_bitflip"),
-    eliminate_duplicates=True)
-
-stop_criteria = ('n_gen', 5)
+stop_criteria = ('n_gen', GENERATIONS)
 
 results = minimize(
-    problem=problem,
-    algorithm=algorithm,
-    termination=stop_criteria
+    problem = problem,
+    algorithm = algorithm,
+    termination = stop_criteria
 )
 
 res_data = results.F.T
 fig = go.Figure(data=go.Scatter(x=0-res_data[0], y=res_data[1], mode='markers'))
-fig.show()
 
+f = open('wind_farms.txt', 'w')
+f.close()
+des_data = sorted(results.G, key=lambda x: x[1])
+for i in des_data:
+    print()
+    wake_model.print_wind_farm(i[0])
+
+fig.show()
 
 '''
 T = np.full((400), True)
