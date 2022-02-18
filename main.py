@@ -87,6 +87,8 @@ dataset = []
 speed_frequency = [0]*SPEED_DIVISIONS
 
 num_lines = sum(1 for line in open('wind_data_combined.txt'))
+g = open('results.txt', 'w')
+g.close()
 f = open("wind_data_combined.txt", "r")
 f.readline()
 for i in range(num_lines):
@@ -147,8 +149,6 @@ results = minimize(
 res_data = results.F.T
 fig = go.Figure(data=go.Scatter(x=-res_data[0], y=res_data[1], mode='markers'))
 
-f = open('wind_farms.txt', 'w')
-f.close()
 des_data = sorted(results.G, key=lambda x: x[1])
 for i in des_data:
     print()
