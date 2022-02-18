@@ -109,7 +109,7 @@ def print_wind_farm(turbine_string):
         coords = i
         wind_farm[coords[0]][coords[1]] = i
 
-    f = open('wind_farms.txt', 'a')
+    f = open('results.txt', 'a')
 
     for i in wind_farm:
         row = ""
