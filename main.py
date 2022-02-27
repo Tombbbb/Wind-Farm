@@ -37,7 +37,6 @@ for i in range(len(GRID)):
     elif x_check == True:
         GRID_Y += str(GRID[i])
 GRID_X, GRID_Y = int(GRID_X), int(GRID_Y)
-print(GRID_X, GRID_Y)
 h.close()
 
 def pol2cart(rho, phi):
