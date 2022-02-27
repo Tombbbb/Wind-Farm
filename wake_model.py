@@ -30,41 +30,27 @@ def getAngle(x, y, z):
         angle += 360
     return angle
 
-def getEmptyWindFarmList():
-    """
-    returns an array for the wind farm layout
-    """
-    wind_farm = []
-    for i in range(0,20):
-        wind_farm.append([None]*20)
-    return wind_farm
-
-
-def Wake(turbine_string, wind_speed, wind_direcetion):
+def Wake(turbine_string, wind_speed, wind_direcetion, x_coords, y_coords):
     """
     Inputs a list for the tubines, the wind speed and the wind direction
     Returns the expected power output of the wind farm layout using the wake model
     """
     Ct = 0.8 #Thrust Coefficient
     Kw = 0.2 #Wake Decay Coefficient
+    Cp = 0.44 #power Coefficient
+    p = 1.225 #air density
     a = 103.33
     m = 20.53
     n = 1190.73
     tau = 1.14
     VP = [a,m,n,tau] #vector parameter of the logistic function
 
-    wind_farm = getEmptyWindFarmList()
-
     T = Turbines()
-    for i in range(400):
+    for i in range(x_coords*y_coords):
         if turbine_string[i] == True:
-            T.addTurbine(math.floor(i/20), i % 20)
+            T.addTurbine(i % y_coords, math.floor(i/x_coords)) #x and y coordinates of the wind farm
 
     turbine_list = T.getTurbines()
-
-    for i in turbine_list:
-        coords = i
-        wind_farm[coords[0]][coords[1]] = i
 
     Turbine_power = 0
     for i in turbine_list:
@@ -72,7 +58,7 @@ def Wake(turbine_string, wind_speed, wind_direcetion):
         Turbine_wake = 0
         Turbine_wake_list = []
         for j in turbine_list:
-            if i != j:
+            if i != j: #make sure the turbines are not the same turbine
                 Turbine_B = j
                 Turbine_angle = getAngle([Turbine_B[0]+1,Turbine_B[1]], Turbine_B, Turbine_A)
                 wake_range = math.degrees(math.atan(Kw))
@@ -81,28 +67,31 @@ def Wake(turbine_string, wind_speed, wind_direcetion):
                     x = diff*math.cos(math.radians(Turbine_angle - wind_direcetion))
                     SD = (1-math.sqrt(1-Ct))/((1+(Kw*x)/(T.getRadius()))**2)
                     Turbine_wake_list.append(SD)
-        if len(Turbine_wake_list) == 0:
+        if len(Turbine_wake_list) == 0: #if there is no wake effect from other turbines
             Turbine_wake = wind_speed
         else:
             for k in Turbine_wake_list:
                  Turbine_wake += k**2
             Turbine_wake = wind_speed*(1 - math.sqrt(Turbine_wake))
-        Turbine_power += a*(1+m*(math.e**(-(Turbine_wake/(T.getRadius())))))/(1+n*(math.e**(-(Turbine_wake/(T.getRadius())))))
+        Turbine_power += 0.5*p*math.pi*Cp*(T.getRadius()**2)*(Turbine_wake**3)
+        #Turbine_power += a*(1+m*(math.e**(-(Turbine_wake/tau))/(1+n*(math.e**(-(Turbine_wake/tau))))
 
     return Turbine_power
 
 
-def print_wind_farm(turbine_string):
+def print_wind_farm(turbine_string, max_x, max_y):
     """
     Inputs a list the represents the wind farm layout
     Prints the wind farm with an O where there is a turbine
     """
-    wind_farm = getEmptyWindFarmList()
+    wind_farm = []
+    for i in range(0,max_y):
+        wind_farm.append([None]*max_x) #empty wind farm array
 
     T = Turbines()
-    for i in range(400):
+    for i in range(max_x*max_y):
         if turbine_string[i] == True:
-            T.addTurbine(math.floor(i/20), i % 20)
+            T.addTurbine(i % max_y, math.floor(i/max_x))
 
     turbine_list = T.getTurbines()
     for i in turbine_list:
