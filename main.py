@@ -1,4 +1,5 @@
-""" Machine Learning to optimise wind turbine placements in a wind farm
+"""
+Machine Learning to optimise wind turbine placements in a wind farm
 
 Creates a Gaucian Mixture Model for existing wind data for a wind farm in La Haute Borne
 Uses the wake model and the GMM to generate expected power output for a given wind farm layout
@@ -6,12 +7,14 @@ Uses Multi-Objective Optinisation to find pareto front of wind farm layouts
 """
 
 from sklearn.mixture import GaussianMixture
-from pymoo.factory import get_sampling, get_crossover, get_mutation
+from pymoo.factory import get_sampling, get_crossover, get_mutation, get_reference_directions
 from pymoo.visualization.scatter import Scatter
-from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.algorithms.moo.age import AGEMOEA
+from pymoo.indicators.hv import Hypervolume
 from pymoo.core.problem import Problem
 from pymoo.optimize import minimize
 import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import wake_model
@@ -45,7 +48,7 @@ def pol2cart(rho, phi):
     input is the wind speed and wind direction
     output is the north-south and east-west components of the wind
     """
-    x = rho * np.cos(np.pi*(phi/180))
+    x = rho * np.cos(np.pi*(phi/180)) #convert to radians
     y = rho * np.sin(np.pi*(phi/180))
     return[x, y]
 
@@ -75,10 +78,8 @@ def power(GMM, Turbines, freq, max_speed, divs, GRID_X, GRID_Y):
     for i in range(len(freq)):
         wind_speed = (i+0.5)*max_speed/len(freq) #wind speed for the wind divison
         cart_values = [] #list of cartesian coordinates
-        pol_values = [] #list of polar coodrinates
         for j in range(0, DIVISIONS):
             cart_values.append(pol2cart(wind_speed, j*360/DIVISIONS))
-            pol_values.append([wind_speed, j*360/DIVISIONS])
         cart_values = np.array(cart_values)
 
         #the weightings of the wind directions based on the gauccian mixture model
@@ -108,8 +109,8 @@ speed_frequency = [0]*SPEED_DIVISIONS
 
 g = open('results.txt', 'w') #clear text file
 g.close()
-num_lines = sum(1 for line in open('wind_data_combined.txt'))
-f = open("wind_data_combined.txt", "r")
+num_lines = sum(1 for line in open('wind_data.txt'))
+f = open("wind_data.txt", "r")
 f.readline()
 for i in range(num_lines):
     line = f.readline()
@@ -123,7 +124,6 @@ for i in range(num_lines):
         continue
 f.close()
 
-print(speed_frequency)
 
 X = np.array(dataset)
 gmm = GaussianMixture(n_components=2).fit(X) #generates gauccian mixture model
@@ -151,19 +151,21 @@ class ProblemWrapper(Problem):
 
 problem = ProblemWrapper(n_var=GRID_X*GRID_Y, n_obj=2, xl=[True]*GRID_X*GRID_Y, xu=[False]*GRID_X*GRID_Y)
 
-algorithm = NSGA2(pop_size = POPULATION,
+ref_dirs = get_reference_directions("energy", 2, 100)
+
+algorithm = AGEMOEA(pop_size = POPULATION,
+    ref_dirs = ref_dirs,
     sampling = get_sampling("bin_random"), #random binary sampling
     crossover = get_crossover("bin_two_point"), #binary two point crossover
     mutation = get_mutation("bin_bitflip", prob = 0.05), #binary bitflip mutation
     eliminate_duplicates = True)
 
-stop_criteria = ('n_gen', GENERATIONS) #stops NSGA2 after n generations
+stop_criteria = ('n_gen', GENERATIONS) #stops AGE/MOEA after n generations
 
 results = minimize(
     problem = problem,
     algorithm = algorithm,
     termination = stop_criteria,
-    save_history=True
 )
 
 res_data = results.F.T
@@ -171,7 +173,6 @@ fig = go.Figure(data=go.Scatter(x=-res_data[0], y=res_data[1], mode='markers'))
 
 des_data = sorted(results.G, key=lambda x: x[1])
 for i in des_data: #itterate through pareto solutions
-    print()
     wake_model.print_wind_farm(i[0], GRID_X, GRID_Y) #shows results in results.py
 
 fig.show()

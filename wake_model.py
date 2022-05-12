@@ -35,15 +35,11 @@ def Wake(turbine_string, wind_speed, wind_direcetion, x_coords, y_coords):
     Inputs a list for the tubines, the wind speed and the wind direction
     Returns the expected power output of the wind farm layout using the wake model
     """
-    Ct = 0.8 #Thrust Coefficient
-    Kw = 0.2 #Wake Decay Coefficient
+    Ct = 0.75 #Thrust Coefficient
+    Kw = 0.038 #Wake Decay Coefficient
     Cp = 0.44 #power Coefficient
     p = 1.225 #air density
-    a = 103.33
-    m = 20.53
-    n = 1190.73
-    tau = 1.14
-    VP = [a,m,n,tau] #vector parameter of the logistic function
+    min_TD = 246 #Minimum distance between turbines
 
     T = Turbines()
     for i in range(x_coords*y_coords):
@@ -63,7 +59,7 @@ def Wake(turbine_string, wind_speed, wind_direcetion, x_coords, y_coords):
                 Turbine_angle = getAngle([Turbine_B[0]+1,Turbine_B[1]], Turbine_B, Turbine_A)
                 wake_range = math.degrees(math.atan(Kw))
                 if wind_direcetion + wake_range >= Turbine_angle and wind_direcetion - wake_range <= Turbine_angle:
-                    diff = math.sqrt(((Turbine_A[0]-Turbine_B[0])*246)**2 + ((Turbine_A[1]-Turbine_B[1])*246)**2)
+                    diff = math.sqrt(((Turbine_A[0]-Turbine_B[0])*min_TD)**2 + ((Turbine_A[1]-Turbine_B[1])*min_TD)**2)
                     x = diff*math.cos(math.radians(Turbine_angle - wind_direcetion))
                     SD = (1-math.sqrt(1-Ct))/((1+(Kw*x)/(T.getRadius()))**2)
                     Turbine_wake_list.append(SD)
@@ -74,7 +70,6 @@ def Wake(turbine_string, wind_speed, wind_direcetion, x_coords, y_coords):
                  Turbine_wake += k**2
             Turbine_wake = wind_speed*(1 - math.sqrt(Turbine_wake))
         Turbine_power += 0.5*p*math.pi*Cp*(T.getRadius()**2)*(Turbine_wake**3)
-        #Turbine_power += a*(1+m*(math.e**(-(Turbine_wake/tau))/(1+n*(math.e**(-(Turbine_wake/tau))))
 
     return Turbine_power
 
