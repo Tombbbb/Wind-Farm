@@ -1,4 +1,4 @@
-# Wind-Farm
+# Wind-Farm. Project Report can be seen in "Project Report.pdf"
 
 Constants:
 DIR_DIVISIONS = 18
